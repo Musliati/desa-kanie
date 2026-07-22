@@ -439,7 +439,7 @@ export default function Home() {
         </div>
       </section>
 
-      {/* 7. Potensi Desa */}
+      {/* 7. Potensi Desa (Telah Diperbarui) */}
       <section
         className="py-section-padding px-gutter max-w-container-max mx-auto"
         id="potensi"
@@ -453,37 +453,26 @@ export default function Home() {
           {potensi.map((p, idx) => (
             <div
               key={idx}
-              className="bg-surface border border-outline-variant rounded-lg p-1 flex flex-col md:flex-row shadow-sm hover:shadow-md transition-shadow"
+              className="bg-surface border border-outline-variant rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-shadow flex flex-col"
             >
-              <div className="flex-1 p-8">
-                <div className="flex items-center gap-3 mb-4">
-                  <span className="material-symbols-outlined text-primary">
-                    {p.icon}
-                  </span>
-                  <h3 className="font-headline-md text-primary">{p.title}</h3>
-                </div>
-                <ul className="space-y-3 mb-6 text-on-surface-variant">
-                  {p.items.map((item, iIdx) => (
-                    <li key={iIdx} className="flex items-start gap-2">
-                      <span className="w-1.5 h-1.5 mt-2 bg-secondary rounded-full shrink-0" />{" "}
-                      <span className="text-justify">{item}</span>
-                    </li>
-                  ))}
-                </ul>
-                <button className="text-primary font-label-md flex items-center gap-1 group">
-                  Info Detail{" "}
-                  <span className="material-symbols-outlined text-sm group-hover:translate-x-1 transition-transform">
-                    arrow_right_alt
-                  </span>
-                </button>
-              </div>
-              <div className="md:w-48 h-64 md:h-auto overflow-hidden rounded-r-lg">
+              {/* Bagian Gambar di Atas */}
+              <div className="w-full h-72 overflow-hidden bg-surface-container">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
-                  className="w-full h-full object-cover"
+                  className="w-full h-full object-cover hover:scale-105 transition-transform duration-500"
                   alt={`Potensi ${p.title}`}
                   src={p.image || "/fallback-potensi.jpg"}
                 />
+              </div>
+
+              {/* Bagian Teks di Bawah */}
+              <div className="p-8 flex-1 flex flex-col justify-between">
+                <div>
+                  <h3 className="font-headline-md text-primary mb-4">{p.title}</h3>
+                  <p className="text-body-md text-on-surface-variant text-justify whitespace-pre-wrap">
+                    {p.items.join("\n\n")}
+                  </p>
+                </div>
               </div>
             </div>
           ))}

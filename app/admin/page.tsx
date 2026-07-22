@@ -684,15 +684,7 @@ export default function AdminPage() {
                       }
                     />
                   </div>
-                  <TextField
-                    label={`Ikon (${ICON_HINT})`}
-                    value={p.icon}
-                    onChange={(v) => {
-                      const next = [...potensi];
-                      next[i] = { ...next[i], icon: v };
-                      setPotensi(next);
-                    }}
-                  />
+
                   <TextField
                     label="Judul"
                     value={p.title}
@@ -702,47 +694,18 @@ export default function AdminPage() {
                       setPotensi(next);
                     }}
                   />
-                  <div className="space-y-2">
-                    <span className="block text-label-md text-on-surface-variant">
-                      Daftar poin
-                    </span>
-                    {p.items.map((item, j) => (
-                      <div key={j} className="flex gap-2 items-start">
-                        <input
-                          type="text"
-                          value={item}
-                          onChange={(e) => {
-                            const next = [...potensi];
-                            const nextItems = [...next[i].items];
-                            nextItems[j] = e.target.value;
-                            next[i] = { ...next[i], items: nextItems };
-                            setPotensi(next);
-                          }}
-                          className="flex-1 rounded-lg border border-outline-variant px-3 py-2 text-body-md focus:outline-none focus:ring-2 focus:ring-primary"
-                        />
-                        <RemoveButton
-                          onClick={() => {
-                            const next = [...potensi];
-                            next[i] = {
-                              ...next[i],
-                              items: next[i].items.filter(
-                                (_, idx) => idx !== j
-                              ),
-                            };
-                            setPotensi(next);
-                          }}
-                        />
-                      </div>
-                    ))}
-                    <AddButton
-                      label="Tambah Poin"
-                      onClick={() => {
-                        const next = [...potensi];
-                        next[i] = { ...next[i], items: [...next[i].items, ""] };
-                        setPotensi(next);
-                      }}
-                    />
-                  </div>
+
+                  <TextField
+                    label="Deskripsi Paragraf"
+                    multiline
+                    value={p.items[0] || ""}
+                    onChange={(v) => {
+                      const next = [...potensi];
+                      next[i] = { ...next[i], items: [v] };
+                      setPotensi(next);
+                    }}
+                  />
+
                   <ImageUploader
                     label="Gambar"
                     folder="potensi"
@@ -760,7 +723,7 @@ export default function AdminPage() {
                 onClick={() =>
                   setPotensi([
                     ...potensi,
-                    { icon: "star", title: "Sektor Baru", items: [], image: "" },
+                    { icon: "", title: "Potensi Baru", items: [""], image: "" },
                   ])
                 }
               />
@@ -957,7 +920,6 @@ export default function AdminPage() {
             </div>
           )}
 
-          {/* Tombol yang di bagian bawah dihapus agar hanya 1 tombol utama yang sticky di atas */}
         </div>
       </div>
     </div>
