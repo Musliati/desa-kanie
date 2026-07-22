@@ -33,10 +33,21 @@ import {
   defaultVisiMisi,
 } from "@/types/content";
 
+// Daftar Menu Navigasi
+const NAV_LINKS = [
+  { id: "home", label: "Beranda" },
+  { id: "profil", label: "Profil" },
+  { id: "potensi", label: "Potensi Desa" },
+  { id: "galeri", label: "Galeri" },
+  { id: "kontak", label: "Kontak" },
+];
+
 export default function Home() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [activeNav, setActiveNav] = useState("home"); // State untuk menu aktif
   const mainRef = useRef<HTMLDivElement>(null);
 
+  // State untuk menyimpan data dari Supabase
   const [loading, setLoading] = useState(true);
   const [hero, setHero] = useState<HeroSection>(defaultHero);
   const [sambutan, setSambutan] = useState<SambutanSection>(defaultSambutan);
@@ -48,6 +59,7 @@ export default function Home() {
   const [lembaga, setLembaga] = useState<LembagaItem[]>([]);
   const [galeri, setGaleri] = useState<GaleriItem[]>([]);
 
+  // 1. Fetch data dari Supabase saat halaman dimuat
   useEffect(() => {
     async function loadContent() {
       const supabase = createClient();
@@ -89,28 +101,53 @@ export default function Home() {
     loadContent();
   }, []);
 
+  // 2. Animasi Scroll & Deteksi Menu Aktif
   useEffect(() => {
     if (loading) return;
 
+    // --- Animasi Reveal ---
     const sections = mainRef.current?.querySelectorAll("section");
-    if (!sections) return;
+    if (sections) {
+      sections.forEach((section) => section.classList.add("reveal-section"));
+      const observer = new IntersectionObserver(
+        (entries) => {
+          entries.forEach((entry) => {
+            if (entry.isIntersecting) {
+              entry.target.classList.add("reveal-visible");
+            }
+          });
+        },
+        { threshold: 0.1 }
+      );
+      sections.forEach((section) => observer.observe(section));
+    }
 
-    sections.forEach((section) => section.classList.add("reveal-section"));
+    // --- Deteksi Scroll untuk Garis Navigasi Aktif ---
+    const handleScroll = () => {
+      const scrollPosition = window.scrollY + 200; // Offset untuk kompensasi navbar *fixed*
 
-    const observer = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((entry) => {
-          if (entry.isIntersecting) {
-            entry.target.classList.add("reveal-visible");
+      // Jika user sudah berada di paling bawah halaman, set Kontak sebagai aktif
+      if (window.innerHeight + Math.round(window.scrollY) >= document.body.offsetHeight - 50) {
+        setActiveNav("kontak");
+        return;
+      }
+
+      for (const link of NAV_LINKS) {
+        const element = document.getElementById(link.id);
+        if (element) {
+          const offsetTop = element.offsetTop;
+          const height = element.offsetHeight;
+          if (scrollPosition >= offsetTop && scrollPosition < offsetTop + height) {
+            setActiveNav(link.id);
           }
-        });
-      },
-      { threshold: 0.1 }
-    );
+        }
+      }
+    };
 
-    sections.forEach((section) => observer.observe(section));
+    window.addEventListener("scroll", handleScroll);
+    handleScroll(); // Panggil sekali saat dimuat
 
-    return () => observer.disconnect();
+    return () => window.removeEventListener("scroll", handleScroll);
   }, [loading]);
 
   if (loading) {
@@ -124,7 +161,7 @@ export default function Home() {
   return (
     <div ref={mainRef}>
       {/* 1. TopNavBar */}
-      <nav className="fixed w-full top-0 z-50 bg-surface/90 backdrop-blur-md shadow-sm">
+      <nav className="fixed w-full top-0 z-50 bg-surface/90 backdrop-blur-md shadow-sm transition-all">
         <div className="flex justify-between items-center px-gutter py-4 max-w-container-max mx-auto">
           <div className="font-headline-md text-headline-md font-bold text-primary flex items-center gap-2">
             <span
@@ -138,36 +175,19 @@ export default function Home() {
 
           {/* Desktop Links */}
           <div className="hidden md:flex items-center gap-8 font-body-md text-body-md">
-            <a
-              className="text-primary border-b-2 border-secondary font-bold pb-1 transition-colors"
-              href="#home"
-            >
-              Beranda
-            </a>
-            <a
-              className="text-on-surface-variant hover:text-primary transition-colors"
-              href="#profil"
-            >
-              Profil
-            </a>
-            <a
-              className="text-on-surface-variant hover:text-primary transition-colors"
-              href="#potensi"
-            >
-              Potensi Desa
-            </a>
-            <a
-              className="text-on-surface-variant hover:text-primary transition-colors"
-              href="#galeri"
-            >
-              Galeri
-            </a>
-            <a
-              className="text-on-surface-variant hover:text-primary transition-colors"
-              href="#kontak"
-            >
-              Kontak
-            </a>
+            {NAV_LINKS.map((link) => (
+              <a
+                key={link.id}
+                href={`#${link.id}`}
+                onClick={() => setActiveNav(link.id)}
+                className={`pb-1 transition-all ${activeNav === link.id
+                    ? "text-primary border-b-2 border-secondary font-bold"
+                    : "text-on-surface-variant hover:text-primary"
+                  }`}
+              >
+                {link.label}
+              </a>
+            ))}
           </div>
 
           <div className="hidden md:flex items-center gap-3">
@@ -201,46 +221,30 @@ export default function Home() {
           </button>
         </div>
 
-        {/* Mobile Menu Panel */}
+        {/* Mobile Menu Panel*/}
         {mobileMenuOpen && (
-          <div className="md:hidden flex flex-col gap-1 px-gutter pb-4 font-body-md text-body-md bg-surface">
+          <div className="md:hidden flex flex-col gap-1 px-gutter pb-4 font-body-md text-body-md bg-surface shadow-md">
+            {NAV_LINKS.map((link) => (
+              <a
+                key={link.id}
+                href={`#${link.id}`}
+                onClick={() => {
+                  setActiveNav(link.id);
+                  setMobileMenuOpen(false);
+                }}
+                className={`py-3 px-4 rounded-lg transition-colors ${activeNav === link.id
+                    ? "bg-primary/10 text-primary font-bold"
+                    : "text-on-surface-variant hover:bg-surface-container-low"
+                  }`}
+              >
+                {link.label}
+              </a>
+            ))}
+
+            <hr className="my-2 border-outline-variant" />
+
             <a
-              className="py-2 text-primary font-bold"
-              href="#home"
-              onClick={() => setMobileMenuOpen(false)}
-            >
-              Beranda
-            </a>
-            <a
-              className="py-2 text-on-surface-variant"
-              href="#profil"
-              onClick={() => setMobileMenuOpen(false)}
-            >
-              Profil
-            </a>
-            <a
-              className="py-2 text-on-surface-variant"
-              href="#potensi"
-              onClick={() => setMobileMenuOpen(false)}
-            >
-              Potensi Desa
-            </a>
-            <a
-              className="py-2 text-on-surface-variant"
-              href="#galeri"
-              onClick={() => setMobileMenuOpen(false)}
-            >
-              Galeri
-            </a>
-            <a
-              className="py-2 text-on-surface-variant"
-              href="#kontak"
-              onClick={() => setMobileMenuOpen(false)}
-            >
-              Kontak
-            </a>
-            <a
-              className="mt-2 inline-block bg-primary text-on-primary px-6 py-2 rounded-full font-label-md text-center"
+              className="mt-2 inline-block bg-primary text-on-primary px-6 py-3 rounded-full font-label-md text-center"
               href="#kontak"
               onClick={() => setMobileMenuOpen(false)}
             >
@@ -248,7 +252,7 @@ export default function Home() {
             </a>
             <Link
               href="/admin/login"
-              className="py-2 text-on-surface-variant flex items-center gap-2"
+              className="py-3 px-4 text-on-surface-variant flex items-center gap-2 hover:bg-surface-container-low rounded-lg"
               onClick={() => setMobileMenuOpen(false)}
             >
               <span className="material-symbols-outlined text-lg">
