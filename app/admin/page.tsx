@@ -312,8 +312,8 @@ export default function AdminPage() {
       {notification && (
         <div
           className={`fixed bottom-6 right-6 z-50 flex items-center gap-3 px-6 py-4 rounded-xl shadow-lg border transition-all duration-300 animate-in slide-in-from-bottom-5 ${notification.type === "success"
-              ? "bg-green-100 border-green-300 text-green-800"
-              : "bg-red-100 border-red-300 text-red-800"
+            ? "bg-green-100 border-green-300 text-green-800"
+            : "bg-red-100 border-red-300 text-red-800"
             }`}
         >
           <span className="material-symbols-outlined font-bold">
@@ -574,44 +574,12 @@ export default function AdminPage() {
                 value={sejarah.heading}
                 onChange={(v) => setSejarah({ ...sejarah, heading: v })}
               />
-              <div className="space-y-3">
-                <span className="block text-label-md text-on-surface-variant">
-                  Paragraf
-                </span>
-                {sejarah.paragraphs.map((p, i) => (
-                  <div key={i} className="flex gap-2 items-start">
-                    <textarea
-                      value={p}
-                      rows={3}
-                      onChange={(e) => {
-                        const next = [...sejarah.paragraphs];
-                        next[i] = e.target.value;
-                        setSejarah({ ...sejarah, paragraphs: next });
-                      }}
-                      className="flex-1 rounded-lg border border-outline-variant px-3 py-2 text-body-md focus:outline-none focus:ring-2 focus:ring-primary"
-                    />
-                    <RemoveButton
-                      onClick={() =>
-                        setSejarah({
-                          ...sejarah,
-                          paragraphs: sejarah.paragraphs.filter(
-                            (_, idx) => idx !== i
-                          ),
-                        })
-                      }
-                    />
-                  </div>
-                ))}
-                <AddButton
-                  label="Tambah Paragraf"
-                  onClick={() =>
-                    setSejarah({
-                      ...sejarah,
-                      paragraphs: [...sejarah.paragraphs, ""],
-                    })
-                  }
-                />
-              </div>
+              <TextField
+                label="Isi Sejarah Desa"
+                multiline
+                value={sejarah.body}
+                onChange={(v) => setSejarah({ ...sejarah, body: v })}
+              />
               <ImageUploader
                 label="Gambar sejarah"
                 folder="sejarah"

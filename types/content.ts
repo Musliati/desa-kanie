@@ -1,8 +1,3 @@
-// Tipe & konstanta konten website.
-// Section dengan 1 baris tetap (id=1 di DB): Hero, Sambutan, Sejarah, VisiMisi.
-// Section berupa list (banyak baris, bisa tambah/hapus): ProfilCard, Potensi, Fasilitas, Lembaga, Galeri.
-// Nav & Footer TIDAK disimpan di Supabase (tetap konstanta di kode).
-
 export type HeroSection = {
     title: string;
     subtitle: string;
@@ -29,7 +24,7 @@ export type ProfilCard = {
 
 export type SejarahSection = {
     heading: string;
-    paragraphs: string[];
+    body: string;
     image: string;
 };
 
@@ -104,8 +99,8 @@ export const defaultSambutan: SambutanSection = {
 };
 
 export const defaultSejarah: SejarahSection = {
-    heading: "Sejarah Desa Bone",
-    paragraphs: [],
+    heading: "",
+    body: "",
     image: "",
 };
 

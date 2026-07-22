@@ -137,26 +137,32 @@ export function saveSambutanSection(supabase: SupabaseClient, s: SambutanSection
     return saveSingleton(supabase, "sambutan_section", { ...s });
 }
 
-export function getSejarahSection(supabase: SupabaseClient) {
-    return getSingleton<SejarahSection>(
-        supabase,
-        "sejarah_section",
-        defaultSejarah,
-        (row) => ({
-            heading: row.heading,
-            paragraphs: (row.paragraphs as string[]) ?? [],
-            image: row.image,
-        })
-    );
-}
-export function saveSejarahSection(supabase: SupabaseClient, s: SejarahSection) {
-    return saveSingleton(supabase, "sejarah_section", {
-        heading: s.heading,
-        paragraphs: s.paragraphs,
-        image: s.image,
-    });
+export async function getSejarahSection(supabase: any): Promise<SejarahSection> {
+    const { data } = await supabase
+        .from("sejarah_section")
+        .select("*")
+        .eq("id", 1)
+        .single();
+
+    return {
+        heading: data?.heading || "",
+        body: data?.body || "", 
+        image: data?.image || "",
+    };
 }
 
+export async function saveSejarahSection(supabase: any, payload: SejarahSection) {
+    const { error } = await supabase
+        .from("sejarah_section")
+        .upsert({
+            id: 1,
+            heading: payload.heading,
+            body: payload.body, 
+            image: payload.image,
+        });
+
+    return { error: error?.message || null };
+}
 export function getVisiMisiSection(supabase: SupabaseClient) {
     return getSingleton<VisiMisiSection>(
         supabase,

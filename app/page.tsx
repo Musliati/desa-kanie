@@ -380,11 +380,9 @@ export default function Home() {
             <h2 className="font-headline-lg text-headline-lg text-primary accent-underline mb-8">
               {sejarah.heading}
             </h2>
-            <div className="space-y-4 text-body-md text-on-surface-variant leading-relaxed text-justify">
-              {sejarah.paragraphs.map((p, idx) => (
-                <p key={idx}>{p}</p>
-              ))}
-            </div>
+            <p className="text-body-md text-on-surface-variant leading-relaxed text-justify whitespace-pre-wrap">
+              {sejarah.body}
+            </p>
           </div>
           <div className="order-1 md:order-2">
             <div className="relative">
