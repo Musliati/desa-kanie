@@ -4,7 +4,7 @@ import {
     type SambutanSection,
     type SejarahSection,
     type VisiMisiSection,
-    type ProfilCard,
+    type DemografiSection,
     type PotensiItem,
     type FasilitasItem,
     type LembagaItem,
@@ -13,6 +13,7 @@ import {
     defaultSambutan,
     defaultSejarah,
     defaultVisiMisi,
+    defaultDemografi,
 } from "@/types/content";
 
 type Row = Record<string, any>;
@@ -23,12 +24,7 @@ async function getSingleton<T>(
     fallback: T,
     rowToT: (row: Row) => T
 ): Promise<T> {
-    const { data, error } = await supabase
-        .from(table)
-        .select("*")
-        .eq("id", 1)
-        .maybeSingle();
-
+    const { data, error } = await supabase.from(table).select("*").eq("id", 1).maybeSingle();
     if (error || !data) return fallback;
     return rowToT(data as Row);
 }
@@ -41,20 +37,11 @@ async function saveSingleton(
     const { error } = await supabase
         .from(table)
         .upsert({ id: 1, ...row, updated_at: new Date().toISOString() });
-
     return { error: error ? error.message : null };
 }
 
-async function getList<T>(
-    supabase: SupabaseClient,
-    table: string,
-    rowToT: (row: Row) => T
-): Promise<T[]> {
-    const { data, error } = await supabase
-        .from(table)
-        .select("*")
-        .order("sort_order", { ascending: true });
-
+async function getList<T>(supabase: SupabaseClient, table: string, rowToT: (row: Row) => T): Promise<T[]> {
+    const { data, error } = await supabase.from(table).select("*").order("sort_order", { ascending: true });
     if (error || !data) return [];
     return (data as Row[]).map(rowToT);
 }
@@ -66,9 +53,7 @@ async function syncList<T extends { id?: number }>(
     items: T[],
     itemToRow: (item: T, index: number) => Row
 ): Promise<{ error: string | null }> {
-    const currentIds = items
-        .filter((i) => i.id != null)
-        .map((i) => i.id as number);
+    const currentIds = items.filter((i) => i.id != null).map((i) => i.id as number);
     const removedIds = originalIds.filter((id) => !currentIds.includes(id));
 
     if (removedIds.length > 0) {
@@ -78,9 +63,7 @@ async function syncList<T extends { id?: number }>(
 
     const newItems = items.filter((i) => i.id == null);
     if (newItems.length > 0) {
-        const toInsert = newItems.map((item) =>
-            itemToRow(item, items.indexOf(item))
-        );
+        const toInsert = newItems.map((item) => itemToRow(item, items.indexOf(item)));
         const { error } = await supabase.from(table).insert(toInsert);
         if (error) return { error: error.message };
     }
@@ -88,10 +71,7 @@ async function syncList<T extends { id?: number }>(
     const existingItems = items.filter((i) => i.id != null);
     for (const item of existingItems) {
         const row = itemToRow(item, items.indexOf(item));
-        const { error } = await supabase
-            .from(table)
-            .update(row)
-            .eq("id", item.id as number);
+        const { error } = await supabase.from(table).update(row).eq("id", item.id as number);
         if (error) return { error: error.message };
     }
 
@@ -118,89 +98,72 @@ export function saveHeroSection(supabase: SupabaseClient, hero: HeroSection) {
 }
 
 export function getSambutanSection(supabase: SupabaseClient) {
-    return getSingleton<SambutanSection>(
-        supabase,
-        "sambutan_section",
-        defaultSambutan,
-        (row) => ({
-            badge: row.badge,
-            heading: row.heading,
-            quote: row.quote,
-            body: row.body,
-            name: row.name,
-            role: row.role,
-            photo: row.photo,
-        })
-    );
+    return getSingleton<SambutanSection>(supabase, "sambutan_section", defaultSambutan, (row) => ({
+        badge: row.badge,
+        heading: row.heading,
+        quote: row.quote,
+        body: row.body,
+        name: row.name,
+        role: row.role,
+        photo: row.photo,
+    }));
 }
 export function saveSambutanSection(supabase: SupabaseClient, s: SambutanSection) {
     return saveSingleton(supabase, "sambutan_section", { ...s });
 }
 
-export async function getSejarahSection(supabase: any): Promise<SejarahSection> {
-    const { data } = await supabase
-        .from("sejarah_section")
-        .select("*")
-        .eq("id", 1)
-        .single();
-
-    return {
-        heading: data?.heading || "",
-        body: data?.body || "", 
-        image: data?.image || "",
-    };
+// === BAGIAN BARU: DEMOGRAFI ===
+export function getDemografiSection(supabase: SupabaseClient) {
+    return getSingleton<DemografiSection>(supabase, "demografi_section", defaultDemografi, (row) => ({
+        luasDesa: row.luas_desa,
+        luasPertanian: row.luas_pertanian,
+        luasPemukiman: row.luas_pemukiman,
+        pendudukTotal: row.penduduk_total,
+        pendudukLaki: row.penduduk_laki,
+        pendudukPerempuan: row.penduduk_perempuan,
+        kkTotal: row.kk_total,
+        kkLaki: row.kk_laki,
+        kkPerempuan: row.kk_perempuan,
+    }));
 }
-
-export async function saveSejarahSection(supabase: any, payload: SejarahSection) {
-    const { error } = await supabase
-        .from("sejarah_section")
-        .upsert({
-            id: 1,
-            heading: payload.heading,
-            body: payload.body, 
-            image: payload.image,
-        });
-
-    return { error: error?.message || null };
+export function saveDemografiSection(supabase: SupabaseClient, d: DemografiSection) {
+    return saveSingleton(supabase, "demografi_section", {
+        luas_desa: d.luasDesa,
+        luas_pertanian: d.luasPertanian,
+        luas_pemukiman: d.luasPemukiman,
+        penduduk_total: d.pendudukTotal,
+        penduduk_laki: d.pendudukLaki,
+        penduduk_perempuan: d.pendudukPerempuan,
+        kk_total: d.kkTotal,
+        kk_laki: d.kkLaki,
+        kk_perempuan: d.kkPerempuan,
+    });
 }
-export function getVisiMisiSection(supabase: SupabaseClient) {
-    return getSingleton<VisiMisiSection>(
-        supabase,
-        "visi_misi_section",
-        defaultVisiMisi,
-        (row) => ({
-            visi: row.visi,
-            misi: (row.misi as string[]) ?? [],
-        })
-    );
+// ==============================
+
+export function getSejarahSection(supabase: SupabaseClient) {
+    return getSingleton<SejarahSection>(supabase, "sejarah_section", defaultSejarah, (row) => ({
+        heading: row.heading,
+        body: row.body,
+        image: row.image,
+    }));
 }
-export function saveVisiMisiSection(supabase: SupabaseClient, s: VisiMisiSection) {
-    return saveSingleton(supabase, "visi_misi_section", {
-        visi: s.visi,
-        misi: s.misi,
+export function saveSejarahSection(supabase: SupabaseClient, s: SejarahSection) {
+    return saveSingleton(supabase, "sejarah_section", {
+        heading: s.heading,
+        body: s.body,
+        image: s.image,
     });
 }
 
-export function getProfilCards(supabase: SupabaseClient) {
-    return getList<ProfilCard>(supabase, "profil_cards", (row) => ({
-        id: row.id,
-        icon: row.icon,
-        title: row.title,
-        desc: row.desc,
+export function getVisiMisiSection(supabase: SupabaseClient) {
+    return getSingleton<VisiMisiSection>(supabase, "visi_misi_section", defaultVisiMisi, (row) => ({
+        visi: row.visi,
+        misi: (row.misi as string[]) ?? [],
     }));
 }
-export function syncProfilCards(
-    supabase: SupabaseClient,
-    originalIds: number[],
-    items: ProfilCard[]
-) {
-    return syncList(supabase, "profil_cards", originalIds, items, (item, index) => ({
-        icon: item.icon,
-        title: item.title,
-        desc: item.desc,
-        sort_order: index,
-        ...nowRow(),
-    }));
+export function saveVisiMisiSection(supabase: SupabaseClient, s: VisiMisiSection) {
+    return saveSingleton(supabase, "visi_misi_section", { visi: s.visi, misi: s.misi });
 }
 
 export function getPotensiItems(supabase: SupabaseClient) {
@@ -212,11 +175,7 @@ export function getPotensiItems(supabase: SupabaseClient) {
         image: row.image,
     }));
 }
-export function syncPotensiItems(
-    supabase: SupabaseClient,
-    originalIds: number[],
-    items: PotensiItem[]
-) {
+export function syncPotensiItems(supabase: SupabaseClient, originalIds: number[], items: PotensiItem[]) {
     return syncList(supabase, "potensi_items", originalIds, items, (item, index) => ({
         icon: item.icon,
         title: item.title,
@@ -235,11 +194,7 @@ export function getFasilitasItems(supabase: SupabaseClient) {
         desc: row.desc,
     }));
 }
-export function syncFasilitasItems(
-    supabase: SupabaseClient,
-    originalIds: number[],
-    items: FasilitasItem[]
-) {
+export function syncFasilitasItems(supabase: SupabaseClient, originalIds: number[], items: FasilitasItem[]) {
     return syncList(supabase, "fasilitas_items", originalIds, items, (item, index) => ({
         icon: item.icon,
         title: item.title,
@@ -258,11 +213,7 @@ export function getLembagaItems(supabase: SupabaseClient) {
         badge: row.badge,
     }));
 }
-export function syncLembagaItems(
-    supabase: SupabaseClient,
-    originalIds: number[],
-    items: LembagaItem[]
-) {
+export function syncLembagaItems(supabase: SupabaseClient, originalIds: number[], items: LembagaItem[]) {
     return syncList(supabase, "lembaga_items", originalIds, items, (item, index) => ({
         name: item.name,
         desc: item.desc,
@@ -281,11 +232,7 @@ export function getGaleriItems(supabase: SupabaseClient) {
         span: row.span,
     }));
 }
-export function syncGaleriItems(
-    supabase: SupabaseClient,
-    originalIds: number[],
-    items: GaleriItem[]
-) {
+export function syncGaleriItems(supabase: SupabaseClient, originalIds: number[], items: GaleriItem[]) {
     return syncList(supabase, "galeri_items", originalIds, items, (item, index) => ({
         alt: item.alt,
         src: item.src,

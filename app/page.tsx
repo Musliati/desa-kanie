@@ -6,9 +6,9 @@ import { createClient } from "@/lib/supabase/client";
 import {
   getHeroSection,
   getSambutanSection,
+  getDemografiSection,
   getSejarahSection,
   getVisiMisiSection,
-  getProfilCards,
   getPotensiItems,
   getFasilitasItems,
   getLembagaItems,
@@ -17,9 +17,9 @@ import {
 import type {
   HeroSection,
   SambutanSection,
+  DemografiSection,
   SejarahSection,
   VisiMisiSection,
-  ProfilCard,
   PotensiItem,
   FasilitasItem,
   LembagaItem,
@@ -28,6 +28,7 @@ import type {
 import {
   defaultHero,
   defaultSambutan,
+  defaultDemografi,
   defaultSejarah,
   defaultVisiMisi,
 } from "@/types/content";
@@ -36,28 +37,26 @@ export default function Home() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const mainRef = useRef<HTMLDivElement>(null);
 
-  // State untuk menyimpan data dari Supabase
   const [loading, setLoading] = useState(true);
   const [hero, setHero] = useState<HeroSection>(defaultHero);
   const [sambutan, setSambutan] = useState<SambutanSection>(defaultSambutan);
+  const [demografi, setDemografi] = useState<DemografiSection>(defaultDemografi);
   const [sejarah, setSejarah] = useState<SejarahSection>(defaultSejarah);
   const [visiMisi, setVisiMisi] = useState<VisiMisiSection>(defaultVisiMisi);
-  const [profilCards, setProfilCards] = useState<ProfilCard[]>([]);
   const [potensi, setPotensi] = useState<PotensiItem[]>([]);
   const [fasilitas, setFasilitas] = useState<FasilitasItem[]>([]);
   const [lembaga, setLembaga] = useState<LembagaItem[]>([]);
   const [galeri, setGaleri] = useState<GaleriItem[]>([]);
 
-  // 1. Fetch data dari Supabase saat halaman dimuat
   useEffect(() => {
     async function loadContent() {
       const supabase = createClient();
       const [
         heroData,
         sambutanData,
+        demografiData,
         sejarahData,
         visiMisiData,
-        profilCardsData,
         potensiData,
         fasilitasData,
         lembagaData,
@@ -65,9 +64,9 @@ export default function Home() {
       ] = await Promise.all([
         getHeroSection(supabase),
         getSambutanSection(supabase),
+        getDemografiSection(supabase),
         getSejarahSection(supabase),
         getVisiMisiSection(supabase),
-        getProfilCards(supabase),
         getPotensiItems(supabase),
         getFasilitasItems(supabase),
         getLembagaItems(supabase),
@@ -76,9 +75,9 @@ export default function Home() {
 
       setHero(heroData);
       setSambutan(sambutanData);
+      setDemografi(demografiData);
       setSejarah(sejarahData);
       setVisiMisi(visiMisiData);
-      setProfilCards(profilCardsData);
       setPotensi(potensiData);
       setFasilitas(fasilitasData);
       setLembaga(lembagaData);
@@ -90,7 +89,6 @@ export default function Home() {
     loadContent();
   }, []);
 
-  // 2. Terapkan animasi scroll setelah konten selesai dimuat
   useEffect(() => {
     if (loading) return;
 
@@ -333,42 +331,81 @@ export default function Home() {
         </div>
       </section>
 
-      {/* 4. Profil Kami (Cards) */}
+      {/* 4. Demografi & Wilayah */}
       <section className="py-section-padding bg-surface-container-low" id="profil">
         <div className="max-w-container-max mx-auto px-gutter">
           <div className="text-center mb-16">
             <h2 className="font-headline-lg text-headline-lg text-primary accent-underline inline-block">
-              Mengenal Desa Kami
+              Data Demografi & Wilayah
             </h2>
           </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
-            {profilCards.map((card, idx) => (
-              <div
-                key={idx}
-                className="bento-card bg-surface p-8 rounded-lg border-t-4 border-primary"
-              >
-                <div className="w-12 h-12 bg-secondary/10 text-secondary rounded-lg flex items-center justify-center mb-6">
-                  <span className="material-symbols-outlined text-3xl">
-                    {card.icon}
-                  </span>
-                </div>
-                <h3 className="font-headline-md text-primary mb-3">
-                  {card.title}
-                </h3>
-                <p className="text-body-md text-on-surface-variant mb-6 whitespace-pre-wrap text-justify">
-                  {card.desc}
-                </p>
-                <a
-                  className="text-secondary font-label-md flex items-center gap-1 hover:gap-3 transition-all"
-                  href="#"
-                >
-                  Selengkapnya{" "}
-                  <span className="material-symbols-outlined text-sm">
-                    arrow_forward
-                  </span>
-                </a>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            {/* Luas Wilayah */}
+            <div className="bg-surface p-8 rounded-2xl border-t-4 border-secondary shadow-sm hover:-translate-y-1 transition-transform">
+              <div className="w-14 h-14 bg-secondary/10 text-secondary rounded-xl flex items-center justify-center mb-6">
+                <span className="material-symbols-outlined text-3xl">map</span>
               </div>
-            ))}
+              <h3 className="font-headline-md text-primary mb-4">Luas Wilayah</h3>
+              <div className="flex items-baseline gap-2 mb-6">
+                <span className="text-4xl md:text-5xl text-secondary font-bold">{demografi.luasDesa}</span>
+                <span className="text-body-lg text-on-surface-variant font-medium">Hektar</span>
+              </div>
+              <div className="space-y-3">
+                <div className="flex justify-between items-center py-2 border-b border-outline-variant/50">
+                  <span className="text-body-md text-on-surface-variant">Area Pertanian</span>
+                  <span className="font-bold text-primary">{demografi.luasPertanian} Ha</span>
+                </div>
+                <div className="flex justify-between items-center py-2">
+                  <span className="text-body-md text-on-surface-variant">Area Pemukiman</span>
+                  <span className="font-bold text-primary">{demografi.luasPemukiman} Ha</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Total Penduduk */}
+            <div className="bg-surface p-8 rounded-2xl border-t-4 border-primary shadow-sm hover:-translate-y-1 transition-transform">
+              <div className="w-14 h-14 bg-primary/10 text-primary rounded-xl flex items-center justify-center mb-6">
+                <span className="material-symbols-outlined text-3xl">groups</span>
+              </div>
+              <h3 className="font-headline-md text-primary mb-4">Total Penduduk</h3>
+              <div className="flex items-baseline gap-2 mb-6">
+                <span className="text-4xl md:text-5xl text-primary font-bold">{demografi.pendudukTotal}</span>
+                <span className="text-body-lg text-on-surface-variant font-medium">Jiwa</span>
+              </div>
+              <div className="space-y-3">
+                <div className="flex justify-between items-center py-2 border-b border-outline-variant/50">
+                  <span className="text-body-md text-on-surface-variant">Laki-laki</span>
+                  <span className="font-bold text-primary">{demografi.pendudukLaki} Jiwa</span>
+                </div>
+                <div className="flex justify-between items-center py-2">
+                  <span className="text-body-md text-on-surface-variant">Perempuan</span>
+                  <span className="font-bold text-primary">{demografi.pendudukPerempuan} Jiwa</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Kepala Keluarga */}
+            <div className="bg-surface p-8 rounded-2xl border-t-4 border-tertiary shadow-sm hover:-translate-y-1 transition-transform">
+              <div className="w-14 h-14 bg-tertiary/10 text-tertiary rounded-xl flex items-center justify-center mb-6">
+                <span className="material-symbols-outlined text-3xl">family_restroom</span>
+              </div>
+              <h3 className="font-headline-md text-primary mb-4">Kepala Keluarga</h3>
+              <div className="flex items-baseline gap-2 mb-6">
+                <span className="text-4xl md:text-5xl text-tertiary font-bold">{demografi.kkTotal}</span>
+                <span className="text-body-lg text-on-surface-variant font-medium">KK</span>
+              </div>
+              <div className="space-y-3">
+                <div className="flex justify-between items-center py-2 border-b border-outline-variant/50">
+                  <span className="text-body-md text-on-surface-variant">KK Laki-laki</span>
+                  <span className="font-bold text-primary">{demografi.kkLaki} KK</span>
+                </div>
+                <div className="flex justify-between items-center py-2">
+                  <span className="text-body-md text-on-surface-variant">KK Perempuan</span>
+                  <span className="font-bold text-primary">{demografi.kkPerempuan} KK</span>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </section>
@@ -437,7 +474,7 @@ export default function Home() {
         </div>
       </section>
 
-      {/* 7. Potensi Desa (Telah Diperbarui) */}
+      {/* 7. Potensi Desa */}
       <section
         className="py-section-padding px-gutter max-w-container-max mx-auto"
         id="potensi"
@@ -453,7 +490,6 @@ export default function Home() {
               key={idx}
               className="bg-surface border border-outline-variant rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-shadow flex flex-col"
             >
-              {/* Bagian Gambar di Atas */}
               <div className="w-full h-72 overflow-hidden bg-surface-container">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
@@ -463,7 +499,6 @@ export default function Home() {
                 />
               </div>
 
-              {/* Bagian Teks di Bawah */}
               <div className="p-8 flex-1 flex flex-col justify-between">
                 <div>
                   <h3 className="font-headline-md text-primary mb-4">{p.title}</h3>

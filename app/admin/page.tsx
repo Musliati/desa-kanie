@@ -8,7 +8,7 @@ import type {
   SambutanSection,
   SejarahSection,
   VisiMisiSection,
-  ProfilCard,
+  DemografiSection,
   PotensiItem,
   FasilitasItem,
   LembagaItem,
@@ -19,6 +19,7 @@ import {
   defaultSambutan,
   defaultSejarah,
   defaultVisiMisi,
+  defaultDemografi,
 } from "@/types/content";
 import {
   getHeroSection,
@@ -29,8 +30,8 @@ import {
   saveSejarahSection,
   getVisiMisiSection,
   saveVisiMisiSection,
-  getProfilCards,
-  syncProfilCards,
+  getDemografiSection,
+  saveDemografiSection,
   getPotensiItems,
   syncPotensiItems,
   getFasilitasItems,
@@ -53,7 +54,7 @@ const ICON_HINT =
 type SectionId =
   | "hero"
   | "sambutan"
-  | "profilCards"
+  | "demografi"
   | "sejarah"
   | "visiMisi"
   | "potensi"
@@ -64,7 +65,7 @@ type SectionId =
 const SECTIONS: { id: SectionId; label: string; icon: string }[] = [
   { id: "hero", label: "Hero (Halaman Utama)", icon: "home" },
   { id: "sambutan", label: "Sambutan Kepala Desa", icon: "person" },
-  { id: "profilCards", label: "Mengenal Desa Kami (kartu)", icon: "grid_view" },
+  { id: "demografi", label: "Data Demografi & Wilayah", icon: "pie_chart" },
   { id: "sejarah", label: "Sejarah Desa", icon: "history_edu" },
   { id: "visiMisi", label: "Visi & Misi", icon: "flag" },
   { id: "potensi", label: "Potensi Unggulan Desa", icon: "agriculture" },
@@ -97,9 +98,7 @@ export default function AdminPage() {
   const [sambutan, setSambutan] = useState<SambutanSection>(defaultSambutan);
   const [sejarah, setSejarah] = useState<SejarahSection>(defaultSejarah);
   const [visiMisi, setVisiMisi] = useState<VisiMisiSection>(defaultVisiMisi);
-
-  const [profilCards, setProfilCards] = useState<ProfilCard[]>([]);
-  const [originalProfilCardIds, setOriginalProfilCardIds] = useState<number[]>([]);
+  const [demografi, setDemografi] = useState<DemografiSection>(defaultDemografi);
 
   const [potensi, setPotensi] = useState<PotensiItem[]>([]);
   const [originalPotensiIds, setOriginalPotensiIds] = useState<number[]>([]);
@@ -113,7 +112,7 @@ export default function AdminPage() {
   const [galeri, setGaleri] = useState<GaleriItem[]>([]);
   const [originalGaleriIds, setOriginalGaleriIds] = useState<number[]>([]);
 
-  // Auto-dismiss untuk notifikasi (hilang setelah 3 detik)
+  // Auto-dismiss untuk notifikasi
   useEffect(() => {
     if (notification) {
       const timer = setTimeout(() => {
@@ -123,7 +122,6 @@ export default function AdminPage() {
     }
   }, [notification]);
 
-  // 1. Cek sesi login dulu
   useEffect(() => {
     (async () => {
       const supabase = createClient();
@@ -139,7 +137,6 @@ export default function AdminPage() {
     })();
   }, [router]);
 
-  // 2. Baru ambil semua konten kalau sudah login
   useEffect(() => {
     if (checkingAuth) return;
 
@@ -148,9 +145,9 @@ export default function AdminPage() {
       const [
         heroData,
         sambutanData,
+        demografiData,
         sejarahData,
         visiMisiData,
-        profilCardsData,
         potensiData,
         fasilitasData,
         lembagaData,
@@ -158,9 +155,9 @@ export default function AdminPage() {
       ] = await Promise.all([
         getHeroSection(supabase),
         getSambutanSection(supabase),
+        getDemografiSection(supabase),
         getSejarahSection(supabase),
         getVisiMisiSection(supabase),
-        getProfilCards(supabase),
         getPotensiItems(supabase),
         getFasilitasItems(supabase),
         getLembagaItems(supabase),
@@ -169,11 +166,9 @@ export default function AdminPage() {
 
       setHero(heroData);
       setSambutan(sambutanData);
+      setDemografi(demografiData);
       setSejarah(sejarahData);
       setVisiMisi(visiMisiData);
-
-      setProfilCards(profilCardsData);
-      setOriginalProfilCardIds(idsOf(profilCardsData));
 
       setPotensi(potensiData);
       setOriginalPotensiIds(idsOf(potensiData));
@@ -223,6 +218,11 @@ export default function AdminPage() {
         error = res.error;
         break;
       }
+      case "demografi": {
+        const res = await saveDemografiSection(supabase, demografi);
+        error = res.error;
+        break;
+      }
       case "sejarah": {
         const res = await saveSejarahSection(supabase, sejarah);
         error = res.error;
@@ -231,16 +231,6 @@ export default function AdminPage() {
       case "visiMisi": {
         const res = await saveVisiMisiSection(supabase, visiMisi);
         error = res.error;
-        break;
-      }
-      case "profilCards": {
-        const res = await syncProfilCards(supabase, originalProfilCardIds, profilCards);
-        error = res.error;
-        if (!error) {
-          const fresh = await getProfilCards(supabase);
-          setProfilCards(fresh);
-          setOriginalProfilCardIds(idsOf(fresh));
-        }
         break;
       }
       case "potensi": {
@@ -287,7 +277,6 @@ export default function AdminPage() {
 
     setSaving(false);
 
-    // Setel notifikasi Pop Up berdasarkan hasilnya
     if (error) {
       setNotification({ text: `Gagal menyimpan: ${error}`, type: "error" });
     } else {
@@ -308,7 +297,6 @@ export default function AdminPage() {
   return (
     <div className="min-h-screen bg-surface-container-low flex relative">
 
-      {/* Toast Notification Pop Up */}
       {notification && (
         <div
           className={`fixed bottom-6 right-6 z-50 flex items-center gap-3 px-6 py-4 rounded-xl shadow-lg border transition-all duration-300 animate-in slide-in-from-bottom-5 ${notification.type === "success"
@@ -331,7 +319,6 @@ export default function AdminPage() {
         </div>
       )}
 
-      {/* Mobile backdrop */}
       {sidebarOpen && (
         <div
           className="fixed inset-0 bg-black/40 z-30 md:hidden"
@@ -339,7 +326,6 @@ export default function AdminPage() {
         />
       )}
 
-      {/* Sidebar */}
       <aside
         className={`fixed md:sticky top-0 left-0 h-screen w-72 shrink-0 bg-surface border-r border-outline-variant z-40 flex flex-col transition-transform duration-300 ${sidebarOpen ? "translate-x-0" : "-translate-x-full"
           } md:translate-x-0`}
@@ -353,7 +339,7 @@ export default function AdminPage() {
           </span>
           <div>
             <p className="font-headline-md text-primary leading-tight">
-              Desa Bone
+              Desa Kanie
             </p>
             <p className="text-label-md text-outline leading-tight">
               Panel Admin
@@ -401,9 +387,7 @@ export default function AdminPage() {
         </div>
       </aside>
 
-      {/* Main content */}
       <div className="flex-1 min-w-0">
-        {/* Top bar (Tombol simpan disisakan hanya di sini) */}
         <div className="sticky top-0 z-10 bg-surface border-b border-outline-variant shadow-sm">
           <div className="px-6 py-4 flex items-center justify-between gap-4">
             <div className="flex items-center gap-3 min-w-0">
@@ -506,63 +490,35 @@ export default function AdminPage() {
             </div>
           )}
 
-          {/* Profil Cards */}
-          {activeSection === "profilCards" && (
-            <div className="space-y-6">
-              {profilCards.map((card, i) => (
-                <div
-                  key={i}
-                  className="bg-surface border border-outline-variant rounded-lg p-4 space-y-3"
-                >
-                  <div className="flex justify-between items-center">
-                    <span className="text-label-md text-outline">
-                      Kartu #{i + 1}
-                    </span>
-                    <RemoveButton
-                      onClick={() =>
-                        setProfilCards(profilCards.filter((_, idx) => idx !== i))
-                      }
-                    />
-                  </div>
-                  <TextField
-                    label={`Ikon (${ICON_HINT})`}
-                    value={card.icon}
-                    onChange={(v) => {
-                      const next = [...profilCards];
-                      next[i] = { ...next[i], icon: v };
-                      setProfilCards(next);
-                    }}
-                  />
-                  <TextField
-                    label="Judul"
-                    value={card.title}
-                    onChange={(v) => {
-                      const next = [...profilCards];
-                      next[i] = { ...next[i], title: v };
-                      setProfilCards(next);
-                    }}
-                  />
-                  <TextField
-                    label="Deskripsi"
-                    multiline
-                    value={card.desc}
-                    onChange={(v) => {
-                      const next = [...profilCards];
-                      next[i] = { ...next[i], desc: v };
-                      setProfilCards(next);
-                    }}
-                  />
-                </div>
-              ))}
-              <AddButton
-                label="Tambah Kartu"
-                onClick={() =>
-                  setProfilCards([
-                    ...profilCards,
-                    { icon: "star", title: "Judul Baru", desc: "" },
-                  ])
-                }
-              />
+          {/* Demografi (Pengganti Profil Cards) */}
+          {activeSection === "demografi" && (
+            <div className="space-y-8">
+              <div className="bg-surface border border-outline-variant rounded-lg p-6 space-y-4 shadow-sm">
+                <h3 className="font-headline-md text-primary flex items-center gap-2 border-b pb-2">
+                  <span className="material-symbols-outlined">map</span> Luas Wilayah (Hektar)
+                </h3>
+                <TextField label="Total Luas Desa" value={demografi.luasDesa} onChange={(v) => setDemografi({ ...demografi, luasDesa: v })} />
+                <TextField label="Luas Pertanian" value={demografi.luasPertanian} onChange={(v) => setDemografi({ ...demografi, luasPertanian: v })} />
+                <TextField label="Luas Pemukiman" value={demografi.luasPemukiman} onChange={(v) => setDemografi({ ...demografi, luasPemukiman: v })} />
+              </div>
+
+              <div className="bg-surface border border-outline-variant rounded-lg p-6 space-y-4 shadow-sm">
+                <h3 className="font-headline-md text-primary flex items-center gap-2 border-b pb-2">
+                  <span className="material-symbols-outlined">groups</span> Total Penduduk (Jiwa)
+                </h3>
+                <TextField label="Total Penduduk" value={demografi.pendudukTotal} onChange={(v) => setDemografi({ ...demografi, pendudukTotal: v })} />
+                <TextField label="Laki - Laki" value={demografi.pendudukLaki} onChange={(v) => setDemografi({ ...demografi, pendudukLaki: v })} />
+                <TextField label="Perempuan" value={demografi.pendudukPerempuan} onChange={(v) => setDemografi({ ...demografi, pendudukPerempuan: v })} />
+              </div>
+
+              <div className="bg-surface border border-outline-variant rounded-lg p-6 space-y-4 shadow-sm">
+                <h3 className="font-headline-md text-primary flex items-center gap-2 border-b pb-2">
+                  <span className="material-symbols-outlined">family_restroom</span> Kepala Keluarga (KK)
+                </h3>
+                <TextField label="Total Kepala Keluarga (KK)" value={demografi.kkTotal} onChange={(v) => setDemografi({ ...demografi, kkTotal: v })} />
+                <TextField label="KK Laki - Laki" value={demografi.kkLaki} onChange={(v) => setDemografi({ ...demografi, kkLaki: v })} />
+                <TextField label="KK Perempuan" value={demografi.kkPerempuan} onChange={(v) => setDemografi({ ...demografi, kkPerempuan: v })} />
+              </div>
             </div>
           )}
 
@@ -652,7 +608,6 @@ export default function AdminPage() {
                       }
                     />
                   </div>
-
                   <TextField
                     label="Judul"
                     value={p.title}
@@ -662,7 +617,6 @@ export default function AdminPage() {
                       setPotensi(next);
                     }}
                   />
-
                   <TextField
                     label="Deskripsi Paragraf"
                     multiline
@@ -673,7 +627,6 @@ export default function AdminPage() {
                       setPotensi(next);
                     }}
                   />
-
                   <ImageUploader
                     label="Gambar"
                     folder="potensi"

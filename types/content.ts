@@ -15,11 +15,16 @@ export type SambutanSection = {
     photo: string;
 };
 
-export type ProfilCard = {
-    id?: number;
-    icon: string;
-    title: string;
-    desc: string;
+export type DemografiSection = {
+    luasDesa: string;
+    luasPertanian: string;
+    luasPemukiman: string;
+    pendudukTotal: string;
+    pendudukLaki: string;
+    pendudukPerempuan: string;
+    kkTotal: string;
+    kkLaki: string;
+    kkPerempuan: string;
 };
 
 export type SejarahSection = {
@@ -74,28 +79,34 @@ export type FooterContent = {
     copyright: string;
 };
 
-// ---------------------------------------------------------
-// Nilai default/fallback -- dipakai kalau tabel masih kosong
-// (belum diisi lewat admin panel), supaya halaman publik
-// tetap tampil rapi, bukan blank.
-// ---------------------------------------------------------
 
 export const defaultHero: HeroSection = {
-    title: "Selamat Datang di Website Resmi Desa Bone",
-    subtitle:
-        "Melayani masyarakat dengan integritas, transparansi, dan komitmen untuk kemajuan berkelanjutan bagi seluruh warga Desa Bone.",
+    title: "Selamat Datang di Website Resmi Desa Kanie",
+    subtitle: "Melayani masyarakat dengan integritas, transparansi, dan komitmen untuk kemajuan berkelanjutan bagi seluruh warga Desa Kanie.",
     ctaLabel: "Profil Desa",
     backgroundImage: "",
 };
 
 export const defaultSambutan: SambutanSection = {
     badge: "Sambutan Hangat",
-    heading: "Kepala Desa Bone",
+    heading: "Kepala Desa Kanie",
     quote: "",
     body: "",
     name: "",
-    role: "Kepala Desa Bone",
+    role: "Kepala Desa Kanie",
     photo: "",
+};
+
+export const defaultDemografi: DemografiSection = {
+    luasDesa: "1.475",
+    luasPertanian: "1.300",
+    luasPemukiman: "175",
+    pendudukTotal: "3.199",
+    pendudukLaki: "1.581",
+    pendudukPerempuan: "1.618",
+    kkTotal: "1.032",
+    kkLaki: "785",
+    kkPerempuan: "247",
 };
 
 export const defaultSejarah: SejarahSection = {
@@ -109,7 +120,6 @@ export const defaultVisiMisi: VisiMisiSection = {
     misi: [],
 };
 
-// Nav & Footer: konstanta biasa, edit langsung di file ini kalau perlu berubah.
 export const staticNav: NavContent = {
     ctaLabel: "Hubungi Kami",
 };
@@ -117,6 +127,6 @@ export const staticNav: NavContent = {
 export const staticFooter: FooterContent = {
     address: "Jl. Raya Poros Bone No. 01, Kec. Bone, Kab. Bone, Sulawesi Selatan, 92711",
     phone: "(0481) 123-4567",
-    email: "kontak@desabone.go.id",
-    copyright: "© 2024 Pemerintah Desa Bone. Seluruh Hak Cipta Dilindungi.",
+    email: "kontak@desakanie.go.id",
+    copyright: "© 2024 Pemerintah Desa Kanie. Seluruh Hak Cipta Dilindungi.",
 };
