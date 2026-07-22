@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { login } from "@/lib/auth";
+import { createClient } from "@/lib/supabase/client";
 
 export default function AdminLoginPage() {
     const router = useRouter();
@@ -16,11 +16,15 @@ export default function AdminLoginPage() {
         setLoading(true);
         setError(null);
 
-        const ok = login(email, password);
+        const supabase = createClient();
+        const { error: signInError } = await supabase.auth.signInWithPassword({
+            email,
+            password,
+        });
 
         setLoading(false);
 
-        if (!ok) {
+        if (signInError) {
             setError("Email atau password salah.");
             return;
         }

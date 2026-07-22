@@ -1,15 +1,24 @@
 "use client";
 
 import { useRef, useState } from "react";
+import { createClient } from "@/lib/supabase/client";
+
+function extFromFileName(name: string): string {
+    const idx = name.lastIndexOf(".");
+    return idx >= 0 ? name.slice(idx + 1).toLowerCase() : "jpg";
+}
 
 export function ImageUploader({
     label,
     value,
     onChange,
+    folder = "misc",
 }: {
     label: string;
     value: string;
     onChange: (url: string) => void;
+    /** Sub-folder di dalam bucket "site-images", contoh: "hero", "sambutan", "galeri" */
+    folder?: string;
 }) {
     const inputRef = useRef<HTMLInputElement>(null);
     const [uploading, setUploading] = useState(false);
@@ -23,13 +32,20 @@ export function ImageUploader({
         setError(null);
 
         try {
-            const dataUrl = await new Promise<string>((resolve, reject) => {
-                const reader = new FileReader();
-                reader.onload = () => resolve(reader.result as string);
-                reader.onerror = () => reject(new Error("Gagal membaca file."));
-                reader.readAsDataURL(file);
-            });
-            onChange(dataUrl);
+            const supabase = createClient();
+            const path = `${folder}/${crypto.randomUUID()}.${extFromFileName(file.name)}`;
+
+            const { error: uploadError } = await supabase.storage
+                .from("site-images")
+                .upload(path, file, {
+                    cacheControl: "3600",
+                    upsert: false,
+                });
+
+            if (uploadError) throw uploadError;
+
+            const { data } = supabase.storage.from("site-images").getPublicUrl(path);
+            onChange(data.publicUrl);
         } catch (err) {
             setError(
                 err instanceof Error ? err.message : "Gagal upload gambar."
